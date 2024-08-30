@@ -4,10 +4,11 @@ import com.example.BackEndProjetOCSpringBoot.Models.User;
 import com.example.BackEndProjetOCSpringBoot.Repositories.UserRepository;
 import com.example.BackEndProjetOCSpringBoot.Interfaces.UserServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
-import java.util.List;
+// import java.sql.Timestamp;
+// import java.util.List;
 
 @Service
 public class UserService implements UserServiceInterface {
@@ -15,15 +16,22 @@ public class UserService implements UserServiceInterface {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder; // Utilise l'interface PasswordEncoder
+
     @Override
-    public User addUser(User user) {
-        user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        user.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+    public User saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 }

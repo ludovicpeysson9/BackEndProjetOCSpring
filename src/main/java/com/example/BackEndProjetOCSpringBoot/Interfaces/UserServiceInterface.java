@@ -1,9 +1,9 @@
 package com.example.BackEndProjetOCSpringBoot.Interfaces;
 
 import com.example.BackEndProjetOCSpringBoot.Models.User;
-import java.util.List;
 
-public interface UserServiceInterface {
-    User addUser(User user);
-    List<User> getAllUsers();
+public interface UserServiceInterface{
+    User saveUser(User user);
+    User findByEmail(String email);
+    boolean existsByEmail(String email);
 }
