@@ -42,14 +42,13 @@ public class AuthController {
                     .body("Error: Email is already taken!");
         }
 
-        // Create new user's account 
         User user = new User(
-                null, // ID will be generated automatically
+                null, 
                 signUpRequest.getEmail(),
                 signUpRequest.getName(),
-                signUpRequest.getPassword(), // use the already encoded password
-                null, // created_at
-                null // updated_at
+                signUpRequest.getPassword(),
+                null, 
+                null
         );
 
         userService.saveUser(user);
@@ -62,7 +61,6 @@ public class AuthController {
         System.out.println("Attempting login with email: " + loginRequest.getEmail() + " and raw password: "
                 + loginRequest.getPassword());
 
-        // Récupération de l'utilisateur depuis la base de données
         User user = userService.findByEmail(loginRequest.getEmail());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: User not found");
@@ -70,7 +68,6 @@ public class AuthController {
 
         System.out.println("Encoded password in DB: " + user.getPassword());
 
-        // Comparaison du mot de passe fourni avec celui en base
         boolean matches = encoder.matches(loginRequest.getPassword(), user.getPassword());
         System.out.println("Password matches: " + matches);
 

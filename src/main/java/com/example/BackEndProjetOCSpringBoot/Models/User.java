@@ -3,6 +3,9 @@ package com.example.BackEndProjetOCSpringBoot.Models;
 import jakarta.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -27,9 +30,11 @@ public class User {
     @NotBlank
     private String password;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     @Column(name = "created_at")
-    private Timestamp createdAt;
+    private Timestamp created_at;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     @Column(name = "updated_at")
-    private Timestamp updatedAt;
+    private Timestamp updated_at;
 }
