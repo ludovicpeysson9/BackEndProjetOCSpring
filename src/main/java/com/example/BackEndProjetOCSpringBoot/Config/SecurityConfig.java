@@ -43,8 +43,9 @@ public class SecurityConfig {
             .sessionManagement(sessionManagement -> 
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/**").permitAll() // Permet l'accès sans authentification aux endpoints /api/auth/**
-                .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+                .anyRequest().permitAll()  
+                // .requestMatchers("/api/auth/**").permitAll() // Permet l'accès sans authentification aux endpoints /api/auth/**
+                // .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
             );
 
         // Ajout du filtre JWT avant le UsernamePasswordAuthenticationFilter
