@@ -43,9 +43,9 @@ public class SecurityConfig {
             .sessionManagement(sessionManagement -> 
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
-                .anyRequest().permitAll()  
-                // .requestMatchers("/api/auth/**").permitAll() // Permet l'accès sans authentification aux endpoints /api/auth/**
-                // .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+                .requestMatchers("/api/auth/**").permitAll() // Permet l'accès sans authentification aux endpoints /api/auth/**
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Permet l'accès à la documentation
+                .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
             );
 
         // Ajout du filtre JWT avant le UsernamePasswordAuthenticationFilter
