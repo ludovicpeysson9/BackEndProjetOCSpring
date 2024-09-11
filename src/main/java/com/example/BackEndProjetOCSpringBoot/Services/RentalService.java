@@ -1,6 +1,5 @@
 package com.example.BackEndProjetOCSpringBoot.Services;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,72 +15,121 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+/**
+ * Service handling rental operations, managing CRUD operations and image
+ * handling for rentals.
+ */
 @Service
 public class RentalService implements RentalServiceInterface {
 
-    @Autowired
-    private RentalRepository rentalRepository;
+    private final RentalRepository rentalRepository;
+    private final CloudinaryServiceInterface cloudinaryService;
 
-    @Autowired
-    private CloudinaryServiceInterface cloudinaryService;
-
-    private RentalResponseDTO convertToDto(Rental rental) {
-
-        RentalResponseDTO rentalResponseDTO = new RentalResponseDTO();
-        rentalResponseDTO.setId(rental.getId());
-        rentalResponseDTO.setName(rental.getName());
-        rentalResponseDTO.setSurface(rental.getSurface());
-        rentalResponseDTO.setPrice(rental.getPrice());
-        rentalResponseDTO.setDescription(rental.getDescription());
-        rentalResponseDTO.setPicture(rental.getPicture());
-        rentalResponseDTO.setOwner_id(rental.getOwner().getId());  
-        rentalResponseDTO.setCreated_at(rental.getCreated_at());
-        rentalResponseDTO.setUpdated_at(rental.getUpdated_at());
-
-        return rentalResponseDTO;
+    public RentalService(RentalRepository rentalRepository, CloudinaryServiceInterface cloudinaryService) {
+        this.rentalRepository = rentalRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
+    /**
+     * Retrieves all rentals and converts them to DTO format.
+     * 
+     * @return List of all rental DTOs.
+     */
     @Override
     public List<RentalResponseDTO> getAllRentals() {
-        List<Rental> rentals = rentalRepository.findAll();
-        return rentals.stream()
-                      .map(this::convertToDto)  
-                      .collect(Collectors.toList());
+        return rentalRepository.findAll()
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Fetches a single rental by its ID and converts it to DTO format.
+     * 
+     * @param id The ID of the rental.
+     * @return The rental DTO.
+     */
     @Override
     public RentalResponseDTO getRentalById(Integer id) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Rental not found"));
-        return convertToDto(rental);  // Utilise la méthode de conversion
+        Rental rental = findRentalById(id);
+        return convertToDto(rental);
     }
 
+    /**
+     * Creates a new rental and uploads its image to a cloud service.
+     * 
+     * @param rental The rental to create.
+     * @param file   The image file associated with the rental.
+     * @return The newly created rental.
+     */
     @Override
     public Rental createRental(Rental rental, MultipartFile file) {
-        // Upload image to Cloudinary and get the URL
-        String imageUrl = cloudinaryService.uploadImage(file);
-        rental.setPicture(imageUrl);  // Set the image URL in the rental object
-
-        // Save the rental object with the image URL in the database
-        return rentalRepository.save(rental);
+        String imageUrl = uploadRentalImage(file);
+        rental.setPicture(imageUrl);
+        return saveRental(rental);
     }
 
+    /**
+     * Deletes a rental by its ID.
+     * 
+     * @param id The ID of the rental to delete.
+     */
     @Override
     public void deleteRental(Integer id) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Rental not found"));
+        Rental rental = findRentalById(id);
         rentalRepository.delete(rental);
     }
 
+    /**
+     * Fetches a rental model by its ID for operations like update.
+     * 
+     * @param id The ID of the rental.
+     * @return The rental model.
+     */
     @Override
     public Rental getRentalByIdModel(Integer id) {
-        return rentalRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Rental not found"));
+        return findRentalById(id);
     }
 
+    /**
+     * Updates a rental and sets its update timestamp to now.
+     * 
+     * @param rental The rental to update.
+     * @return The updated rental.
+     */
     @Override
     public Rental updateRental(Rental rental) {
-        rental.setUpdated_at(Timestamp.from(Instant.now()));  
+        rental.setUpdated_at(Timestamp.from(Instant.now()));
+        return saveRental(rental);
+    }
+
+    private RentalResponseDTO convertToDto(Rental rental) {
+        return RentalResponseDTO.builder()
+                .id(rental.getId())
+                .name(rental.getName())
+                .surface(rental.getSurface())
+                .price(rental.getPrice())
+                .description(rental.getDescription())
+                .picture(rental.getPicture())
+                .owner_id(rental.getOwner().getId())
+                .created_at(rental.getCreated_at())
+                .updated_at(rental.getUpdated_at())
+                .build();
+    }
+
+    private Rental findRentalById(Integer id) {
+        return rentalRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Rental not found with ID: " + id));
+    }
+
+    private String uploadRentalImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Image file is required.");
+        }
+        return cloudinaryService.uploadImage(file);
+    }
+
+    private Rental saveRental(Rental rental) {
         return rentalRepository.save(rental);
     }
 }
