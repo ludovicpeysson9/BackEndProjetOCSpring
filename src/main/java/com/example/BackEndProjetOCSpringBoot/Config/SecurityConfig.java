@@ -1,7 +1,6 @@
 package com.example.BackEndProjetOCSpringBoot.Config;
 
 import com.example.BackEndProjetOCSpringBoot.Security.JwtAuthenticationEntryPoint;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,20 +19,20 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationEntryPoint unauthorizedHandler;
+    private final JwtAuthenticationEntryPoint unauthorizedHandler;
+    private final JwtTokenFilter jwtTokenFilter;
 
-    @Autowired
-    private JwtTokenFilter jwtTokenFilter;
+    public SecurityConfig(JwtAuthenticationEntryPoint unauthorizedHandler, JwtTokenFilter jwtTokenFilter) {
+        this.unauthorizedHandler = unauthorizedHandler;
+        this.jwtTokenFilter = jwtTokenFilter;
+    }
 
-    // Définition du bean PasswordEncoder qui sera injecté partout
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Utilisation de BCryptPasswordEncoder comme méthode d'encodage par défaut
         return new BCryptPasswordEncoder();
     }
 
-    // Configuration du SecurityFilterChain pour gérer la sécurité des requêtes HTTP
+    //Configuration of SecurityFilterCHain that handles security of HTTP requests
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(withDefaults())
@@ -43,18 +42,17 @@ public class SecurityConfig {
             .sessionManagement(sessionManagement -> 
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/**").permitAll() // Permet l'accès sans authentification aux endpoints /api/auth/**
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Permet l'accès à la documentation
-                .anyRequest().authenticated() // Toutes les autres requêtes nécessitent une authentification
+                .requestMatchers("/api/auth/**").permitAll() // Permit access to /api/auth/**
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Permit access to documentation
+                .anyRequest().authenticated() // All of the others requests need authentication
             );
 
-        // Ajout du filtre JWT avant le UsernamePasswordAuthenticationFilter
+        // Add of JWT filter before the UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build(); // Construction de la chaîne de filtres de sécurité
+        return http.build(); 
     }
 
-    // Fournit l'AuthenticationManager utilisé pour l'authentification
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
